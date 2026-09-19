@@ -1,18 +1,22 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AppLayout from '../components/layout/AppLayout.jsx'
 import Badge from '../components/ui/Badge.jsx'
 import EmptyState from '../components/ui/EmptyState.jsx'
-import { MOCK_ORGS } from '../data/mockData.js'
+import { api } from '../api/client.js'
 
-// TODO(owner: organisations person): replace with GET /api/organisations
 export default function Organisations() {
-  const location = useLocation()
   const navigate = useNavigate()
-  const [orgs, setOrgs] = useState(() => [
-    ...MOCK_ORGS,
-    ...(location.state?.newOrganisation ? [location.state.newOrganisation] : []),
-  ])
+  const [orgs, setOrgs] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    api.get('/organisations/')
+      .then((response) => setOrgs(response.data))
+      .catch(() => setError('Unable to load organisations.'))
+      .finally(() => setLoading(false))
+  }, [])
 
   function openCreatePage() {
     navigate('/organisations/new')
@@ -29,7 +33,11 @@ export default function Organisations() {
         </button>
       </div>
 
-      {orgs.length === 0 ? (
+      {loading ? (
+        <p className="text-sm text-ink/60">Loading organisations...</p>
+      ) : error ? (
+        <p className="rounded border border-health-red/30 bg-health-red/5 px-3 py-2 text-sm text-health-red">{error}</p>
+      ) : orgs.length === 0 ? (
         <EmptyState
           title="No organisations yet"
           description="Add your first partner or sponsor to start tracking the relationship."
@@ -61,7 +69,7 @@ export default function Organisations() {
                   <td className="px-5 py-3 text-ink/70">{org.sector}</td>
                   <td className="px-5 py-3 text-ink/70 capitalize">{org.status}</td>
                   <td className="px-5 py-3">
-                    <Badge tone={org.health}>{org.health}</Badge>
+                    <Badge tone={org.health_status}>{org.health_status}</Badge>
                   </td>
                 </tr>
               ))}

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import AppLayout from '../components/layout/AppLayout.jsx'
+import { api } from '../api/client.js'
 
 const INITIAL_FORM = {
   name: '',
@@ -13,22 +14,30 @@ const INITIAL_FORM = {
 export default function AddOrganisation() {
   const navigate = useNavigate()
   const [form, setForm] = useState(INITIAL_FORM)
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   function handleChange(event) {
     const { name, value } = event.target
     setForm((current) => ({ ...current, [name]: value }))
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
-    navigate('/organisations', {
-      state: {
-        newOrganisation: {
-          ...form,
-          id: `new-${Date.now()}`,
-        },
-      },
-    })
+    setError('')
+    setSubmitting(true)
+    try {
+      await api.post('/organisations/', {
+        name: form.name,
+        sector: form.sector || null,
+        status: form.status,
+      })
+      navigate('/organisations')
+    } catch (requestError) {
+      setError(requestError.response?.data?.detail || 'Unable to add organisation.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -107,6 +116,12 @@ export default function AddOrganisation() {
             </div>
           </div>
 
+          {error && (
+            <p className="mt-4 rounded border border-health-red/30 bg-health-red/5 px-3 py-2 text-sm text-health-red">
+              {error}
+            </p>
+          )}
+
           <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <Link
               to="/organisations"
@@ -116,9 +131,10 @@ export default function AddOrganisation() {
             </Link>
             <button
               type="submit"
+              disabled={submitting}
               className="rounded-lg bg-gradient-to-b from-[#294522] via-[#55612D] to-[#8C8A3E] px-4 py-2 text-sm font-medium text-white hover:brightness-90"
             >
-              Add organisation
+              {submitting ? 'Adding...' : 'Add organisation'}
             </button>
           </div>
         </form>
