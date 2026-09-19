@@ -18,19 +18,29 @@ export default function OrganisationDetail() {
   useEffect(() => {
     setLoading(true)
     setError('')
-    Promise.all([
+    Promise.allSettled([
       api.get(`/organisations/${id}`),
       api.get(`/contacts/?organisation_id=${id}`),
       api.get(`/engagements/?organisation_id=${id}`),
       api.get(`/opportunities/?organisation_id=${id}`),
     ])
-      .then(([organisationResponse, contactsResponse, engagementsResponse, opportunitiesResponse]) => {
-        setOrganisation(organisationResponse.data)
-        setContacts(contactsResponse.data)
-        setEngagements(engagementsResponse.data.items)
-        setOpportunities(opportunitiesResponse.data.items)
+      .then(([organisationResult, contactsResult, engagementsResult, opportunitiesResult]) => {
+        if (organisationResult.status === 'fulfilled') {
+          setOrganisation(organisationResult.value.data)
+        }
+        if (contactsResult.status === 'fulfilled') {
+          setContacts(contactsResult.value.data)
+        }
+        if (engagementsResult.status === 'fulfilled') {
+          setEngagements(engagementsResult.value.data.items)
+        }
+        if (opportunitiesResult.status === 'fulfilled') {
+          setOpportunities(opportunitiesResult.value.data.items)
+        }
+        if (organisationResult.status === 'rejected') {
+          setError('This organisation could not be loaded.')
+        }
       })
-      .catch(() => setError('This organisation could not be loaded.'))
       .finally(() => setLoading(false))
   }, [id])
 

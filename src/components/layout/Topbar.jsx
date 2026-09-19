@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Bell, ChevronDown, LogOut, Menu, Settings as SettingsIcon } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext.jsx'
-import { MOCK_ENGAGEMENTS, MOCK_OPPS, MOCK_ORGS } from '../../data/mockData.js'
+import { MOCK_ENGAGEMENTS, MOCK_OPPS } from '../../data/mockData.js'
+import { api } from '../../api/client.js'
 
 const ROLE_LABELS = {
   admin: 'Administrator',
@@ -12,17 +13,7 @@ const ROLE_LABELS = {
   finance: 'Finance',
 }
 
-const SEARCH_INDEX = [
-  ...MOCK_ORGS.map((organisation) => ({
-    label: organisation.name,
-    type: 'Organisation',
-    path: `/organisations/${organisation.id}`,
-  })),
-  ...MOCK_ORGS.map((organisation) => ({
-    label: organisation.name,
-    type: 'Partner',
-    path: `/organisations/${organisation.id}`,
-  })),
+const STATIC_SEARCH_INDEX = [
   ...MOCK_ENGAGEMENTS.map((engagement) => ({
     label: `${engagement.organisation} ${engagement.title} ${engagement.summary}`,
     type: 'Engagement',
@@ -49,15 +40,43 @@ export default function Topbar({ notificationCount = 3, onMenuClick }) {
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [organisations, setOrganisations] = useState([])
 
-  const normalizedQuery = searchQuery.trim().toLowerCase()
+  useEffect(() => {
+    api.get('/organisations/')
+      .then((response) => setOrganisations(response.data))
+      .catch(() => setOrganisations([]))
+  }, [])
 
-  function handleSearch(event) {
-    if (event.key !== 'Enter' || !normalizedQuery) return
+  async function handleSearch(event) {
+    event.preventDefault()
+    const normalizedQuery = event.currentTarget.elements.search.value.trim().toLowerCase()
+    if (!normalizedQuery) return
 
-    const result = SEARCH_INDEX.find((item) => (
-      `${item.label} ${item.type}`.toLowerCase().includes(normalizedQuery)
+    let liveOrganisations = organisations
+    if (liveOrganisations.length === 0) {
+      try {
+        const response = await api.get('/organisations/')
+        liveOrganisations = response.data
+        setOrganisations(liveOrganisations)
+      } catch {
+        liveOrganisations = []
+      }
+    }
+
+    const liveOrganisationIndex = liveOrganisations.map((organisation) => ({
+      label: organisation.name,
+      type: 'Organisation',
+      path: `/organisations/${organisation.id}`,
+    }))
+    const searchIndex = [...liveOrganisationIndex, ...STATIC_SEARCH_INDEX]
+    const organisationMatches = liveOrganisationIndex.filter((item) => (
+      item.label.toLowerCase().includes(normalizedQuery)
     ))
+    const result = organisationMatches.find((item) => item.label.toLowerCase() === normalizedQuery)
+      || organisationMatches.find((item) => item.label.toLowerCase().startsWith(normalizedQuery))
+      || organisationMatches[0]
+      || searchIndex.find((item) => `${item.label} ${item.type}`.toLowerCase().includes(normalizedQuery))
 
     if (result) {
       setSearchQuery('')
@@ -80,20 +99,20 @@ export default function Topbar({ notificationCount = 3, onMenuClick }) {
       >
         <Menu size={21} />
       </button>
-      <div className="relative order-last w-full sm:order-none sm:block sm:min-w-0 sm:max-w-md sm:flex-1">
+      <form onSubmit={handleSearch} className="relative order-last w-full sm:order-none sm:block sm:min-w-0 sm:max-w-md sm:flex-1">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40" />
         <input
+          name="search"
           type="search"
           value={searchQuery}
           onChange={(event) => {
             setSearchQuery(event.target.value)
           }}
-          onKeyDown={handleSearch}
           placeholder="Search organisations, contacts, opportunities..."
           className="w-full rounded-lg border border-line bg-paper py-2 pl-9 pr-3 text-sm
                      placeholder:text-ink/40 focus:border-accent focus:outline-none"
         />
-      </div>
+      </form>
 
       <div className="ml-auto flex items-center gap-3 sm:gap-5">
         <button
