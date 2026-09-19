@@ -5,6 +5,15 @@ import { useEffect, useState } from 'react'
 import { api } from '../api/client.js'
 
 const STAGES = ['lead', 'contacted', 'proposal', 'negotiation', 'active', 'won', 'lost']
+const STAGE_LABELS = {
+  lead: 'Lead',
+  contacted: 'Contacted',
+  proposal: 'Proposal',
+  negotiation: 'Negotiation',
+  active: 'Active',
+  won: 'Won',
+  lost: 'Lost',
+}
 export default function Opportunities() {
   const [opportunities, setOpportunities] = useState([])
   const [loading, setLoading] = useState(true)
@@ -30,7 +39,7 @@ export default function Opportunities() {
         {STAGES.map((stage) => (
           <div key={stage} className="min-w-[220px] flex-1 rounded-lg bg-ink/5 p-3 lg:min-w-[180px]">
             <h4 className="mb-3 text-xs font-medium uppercase tracking-wide text-ink/50">
-              {stage}
+              {STAGE_LABELS[stage]}
             </h4>
             <div className="space-y-2">
               {opportunities.filter((o) => o.stage === stage).map((o) => (
