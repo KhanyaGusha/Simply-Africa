@@ -135,7 +135,7 @@ export default function Dashboard() {
 
         <div className="min-w-0 flex-1 basis-full rounded-xl border border-line bg-white p-5 lg:basis-0">
           <h3 className="mb-4 font-serif text-lg">Relationship Health</h3>
-          <div className="flex items-center gap-5">
+          <div className="flex justify-center">
             <DonutChart
               data={[
                 { name: 'Healthy', value: 78, pct: 78, color: '#1DA05C' },
@@ -145,14 +145,14 @@ export default function Dashboard() {
               centerValue="78%"
             />
           </div>
-          <ul className="mt-4 space-y-2">
+          <ul className="mt-6 space-y-3 text-xl">
             {HEALTH_BREAKDOWN.map((h) => (
-              <li key={h.label} className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2 text-ink/70">
-                  <Badge tone={h.tone}>&nbsp;</Badge>
-                  {h.label}
+              <li key={h.label} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
+                <span className="flex min-w-0 items-center gap-3 text-ink/70">
+                  <span className="inline-block h-3 w-3 rounded-full bg-ink/20" />
+                  <span className="min-w-0 break-words">{h.label}</span>
                 </span>
-                <span className="font-medium">{h.count}</span>
+                <span className="font-medium text-ink/70 whitespace-nowrap">{h.count}</span>
               </li>
             ))}
           </ul>
@@ -168,13 +168,13 @@ export default function Dashboard() {
           </div>
           <div className="divide-y divide-line">
             {RECENT_ENGAGEMENTS.map((e) => (
-              <div key={e.org + e.date} className="py-3 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">{e.org}</span>
+              <div key={e.org + e.date} className="min-w-0 py-3 text-sm">
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <span className="min-w-0 truncate font-medium">{e.org}</span>
                   <Badge tone="blue">{e.type}</Badge>
                 </div>
-                <p className="mt-1 text-ink/60">{e.summary}</p>
-                <p className="mt-1 text-xs text-ink/40">{e.date} · Next: {e.next}</p>
+                <p className="mt-1 break-words text-ink/60">{e.summary}</p>
+                <p className="mt-1 break-words text-xs text-ink/40">{e.date} · Next: {e.next}</p>
               </div>
             ))}
           </div>
@@ -187,17 +187,19 @@ export default function Dashboard() {
           </div>
           <div className="divide-y divide-line">
             {TOP_PARTNERS.map((p) => (
-              <div key={p.name} className="flex items-center justify-between py-3 text-sm">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-ink text-xs font-medium text-white">
+              <div key={p.name} className="flex min-w-0 items-center justify-between gap-3 py-3 text-sm">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink text-xs font-medium text-white">
                     {p.code}
                   </div>
-                  <div>
-                    <p className="font-medium">{p.name}</p>
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{p.name}</p>
                     <p className="text-xs text-ink/50">{p.type}</p>
                   </div>
                 </div>
-                <ProgressBar score={p.score} />
+                <div className="shrink-0">
+                  <ProgressBar score={p.score} />
+                </div>
               </div>
             ))}
           </div>
